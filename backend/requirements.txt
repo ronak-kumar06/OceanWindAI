@@ -1,0 +1,22 @@
+fastapi
+uvicorn[standard]
+pydantic[email]
+pydantic-settings
+sqlalchemy
+python-dotenv
+httpx
+requests
+# Scientific / ML
+numpy
+matplotlib
+scipy
+scikit-learn
+# Geospatial / Visualization
+contextily
+shapely
+# SAR / Sentinel data
+sentinelhub
+# Data formats
+netCDF4
+# Web
+python-multipart
