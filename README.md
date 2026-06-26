@@ -112,12 +112,3 @@ Open [http://localhost:3000](http://localhost:3000) in your browser to access th
 7. **Mapping:** Wind vectors (U/V components) are interpolated across a regular grid, mapped visually via `matplotlib`, and JSON payload + PNG are sent back to the UI.
 
 ---
-
-## 📄 License
-
-This project is licensed under the MIT License - see the LICENSE file for details.
-
----
-<div align="center">
-  <i>Developed for Oceanographic SAR Analysis</i>
-</div>
