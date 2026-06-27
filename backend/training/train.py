@@ -29,7 +29,14 @@ if str(BACKEND_DIR) not in sys.path:
     sys.path.insert(0, str(BACKEND_DIR))
 
 
-def build_synthetic_manifest(data_dir: Path, manifest_path: Path, n_scenes: int = 3) -> int:
+def build_synthetic_manifest(
+    data_dir: Path,
+    manifest_path: Path,
+    n_scenes: int = 3,
+    *,
+    ascat_dir: str | None = None,
+    simulate_ascat: bool = True,
+) -> int:
     """Generate synthetic SAR scenes and collocate with simulated ASCAT."""
     import numpy as np
 
@@ -56,7 +63,8 @@ def build_synthetic_manifest(data_dir: Path, manifest_path: Path, n_scenes: int 
             bbox,
             scene_time,
             str(scene_dir),
-            simulate_ascat=True,
+            simulate_ascat=simulate_ascat,
+            ascat_dir=ascat_dir,
         )
         all_samples.extend(samples)
 
@@ -149,16 +157,21 @@ def train(
 
 
 def main() -> None:
-    from config import MODEL_WEIGHTS_PATH, TRAINING_DATA_DIR, TRAINING_MANIFEST
+    from config import ASCAT_DATA_DIR, MODEL_WEIGHTS_PATH, TRAINING_DATA_DIR, TRAINING_MANIFEST
 
     parser = argparse.ArgumentParser(description="Train ResNet50-SAR wind direction model")
     parser.add_argument("--manifest", type=str, default=str(TRAINING_MANIFEST))
     parser.add_argument("--weights", type=str, default=MODEL_WEIGHTS_PATH)
     parser.add_argument("--data-dir", type=str, default=str(TRAINING_DATA_DIR))
+    parser.add_argument("--ascat-dir", type=str, default=str(ASCAT_DATA_DIR))
     parser.add_argument("--epochs", type=int, default=10)
     parser.add_argument("--batch-size", type=int, default=32)
     parser.add_argument("--lr", type=float, default=1e-4)
     parser.add_argument("--build-synthetic", action="store_true", help="Build dev manifest from mock SAR")
+    parser.add_argument("--simulate-ascat", action="store_true", default=True,
+                        help="Use simulated ASCAT when no NetCDF files present (default)")
+    parser.add_argument("--no-simulate-ascat", dest="simulate_ascat", action="store_false",
+                        help="Require real ASCAT NetCDF files for manifest building")
     parser.add_argument("--resume", type=str, default=None, help="Resume from existing weights")
     args = parser.parse_args()
 
@@ -168,7 +181,11 @@ def main() -> None:
 
     if args.build_synthetic:
         data_dir.mkdir(parents=True, exist_ok=True)
-        n = build_synthetic_manifest(data_dir, manifest_path)
+        n = build_synthetic_manifest(
+            data_dir, manifest_path,
+            ascat_dir=args.ascat_dir,
+            simulate_ascat=args.simulate_ascat,
+        )
         logger.info("Built synthetic manifest with %d samples", n)
 
     if not manifest_path.exists():

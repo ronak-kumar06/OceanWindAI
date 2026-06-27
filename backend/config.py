@@ -50,3 +50,4 @@ MODEL_WEIGHTS_PATH = os.getenv(
 )
 TRAINING_DATA_DIR = Path(os.getenv("TRAINING_DATA_DIR", str(BASE_DIR / "data" / "training")))
 TRAINING_MANIFEST = TRAINING_DATA_DIR / "manifest.csv"
+ASCAT_DATA_DIR = Path(os.getenv("ASCAT_DATA_DIR", str(BASE_DIR / "data" / "ascat")))

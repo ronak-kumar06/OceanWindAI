@@ -15,6 +15,7 @@ import math
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 from typing import Iterable, List, Optional, Sequence
+from pathlib import Path
 
 import numpy as np
 
@@ -76,6 +77,8 @@ def load_ascat_observations(
     scene_time: datetime,
     *,
     simulate: bool = True,
+    ascat_dir: str | Path | None = None,
+    max_time_min: float = 60.0,
 ) -> List[AscatObservation]:
     """
     Load ASCAT observations for a bounding box and time window.
@@ -84,16 +87,30 @@ def load_ascat_observations(
     ----------
     bbox : [min_lon, min_lat, max_lon, max_lat]
     scene_time : SAR acquisition time
-    simulate : when True, generate synthetic ASCAT grid for development
+    simulate : when True and no ASCAT files found, generate synthetic grid
+    ascat_dir : directory of ASCAT L2 NetCDF files (overrides config)
+    max_time_min : temporal collocation window (±minutes)
 
     Returns
     -------
     List of AscatObservation
     """
+    from config import ASCAT_DATA_DIR
+
+    data_dir = Path(ascat_dir) if ascat_dir else ASCAT_DATA_DIR
+    if data_dir.is_dir() and any(data_dir.glob("**/*.nc*")):
+        from training.ascat_reader import load_ascat_from_directory
+        observations = load_ascat_from_directory(
+            data_dir, bbox, scene_time, max_time_min=max_time_min,
+        )
+        if observations:
+            return observations
+        logger.warning("No ASCAT matches in %s — falling back to simulation", data_dir)
+
     if not simulate:
-        raise NotImplementedError(
-            "Real ASCAT ingestion not yet implemented. "
-            "Integrate OSI SAF ASCAT L2 NetCDF reader here."
+        raise FileNotFoundError(
+            f"No ASCAT NetCDF data in {data_dir}. "
+            "Download OSI SAF ASCAT L2 products or pass --simulate-ascat."
         )
 
     min_lon, min_lat, max_lon, max_lat = bbox
@@ -211,6 +228,7 @@ def build_manifest_from_scene(
     output_dir: str,
     *,
     simulate_ascat: bool = True,
+    ascat_dir: str | Path | None = None,
 ) -> List[CollocatedSample]:
     """
     Extract patches from a SAR scene, collocate with ASCAT, and return samples.
@@ -225,7 +243,9 @@ def build_manifest_from_scene(
     out.mkdir(parents=True, exist_ok=True)
 
     patches = extract_patches(sigma0, inc_angle, list(bbox))
-    ascat = load_ascat_observations(bbox, scene_time, simulate=simulate_ascat)
+    ascat = load_ascat_observations(
+        bbox, scene_time, simulate=simulate_ascat, ascat_dir=ascat_dir,
+    )
     samples = collocate_patches(patches, ascat, scene_time)
 
     for sample in samples:
