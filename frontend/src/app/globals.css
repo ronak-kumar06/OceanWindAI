@@ -1,0 +1,16 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: dark;
+}
+
+body {
+  @apply bg-ocean-950 text-slate-100 antialiased;
+}
+
+.leaflet-container {
+  font-family: inherit;
+  background: #0a1628;
+}

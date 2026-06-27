@@ -27,10 +27,58 @@ using ResNet. Remote Sensing of Environment, 252, 112056.
 """
 import math
 import logging
+from pathlib import Path
 import numpy as np
 from typing import List
 
+from config import MODEL_WEIGHTS_PATH
+
 logger = logging.getLogger(__name__)
+
+_model_cache = None
+
+
+def _get_trained_model():
+    """Load trained ResNet weights if available."""
+    global _model_cache
+    if _model_cache is not None:
+        return _model_cache
+
+    weights = Path(MODEL_WEIGHTS_PATH)
+    if not weights.exists():
+        return None
+
+    try:
+        from ml.resnet_model import load_model
+        model = load_model(str(weights))
+        if model is not None:
+            _model_cache = model
+            logger.info("Using trained ResNet50-SAR weights from %s", weights)
+        return model
+    except Exception as exc:
+        logger.warning("Could not load trained model: %s", exc)
+        return None
+
+
+def _predict_with_model(model, patches: List[dict]) -> List[float]:
+    """Run ResNet50-SAR forward pass on SAR patches."""
+    import torch
+    from training.dataset import patch_to_tensor
+
+    directions = []
+    with torch.no_grad():
+        for p in patches:
+            if not p["valid"]:
+                directions.append(float("nan"))
+                continue
+            tensor = patch_to_tensor(p["patch"]).unsqueeze(0)
+            logits = model(tensor)
+            bin_idx = int(logits.argmax(1).item())
+            aliased_dir = bin_idx * (180.0 / 36)
+            directions.append(aliased_dir)
+
+    logger.info("ResNet inference: %d valid patches", sum(np.isfinite(directions)))
+    return directions
 
 
 # ── Texture feature extraction ─────────────────────────────────────────────────
@@ -160,6 +208,10 @@ def predict_direction(patches: List[dict], global_seed: int = 42) -> List[float]
     -------
     List[float] — aliased wind direction per patch (degrees, 0–180°)
     """
+    model = _get_trained_model()
+    if model is not None:
+        return _predict_with_model(model, patches)
+
     directions = []
     for idx, p in enumerate(patches):
         if not p["valid"]:

@@ -15,6 +15,8 @@ backend/oceanwind.db
 backend/static/*.png
 backend/static/*.jpg
 backend/static/*.jpeg
+backend/data/
+backend/ml/weights/*.pth
 
 # Logs
 *.log

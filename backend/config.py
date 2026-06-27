@@ -40,3 +40,13 @@ DATABASE_URL = os.getenv("DATABASE_URL", f"sqlite:///{BASE_DIR / 'oceanwind.db'}
 API_HOST = os.getenv("API_HOST", "127.0.0.1")
 API_PORT = int(os.getenv("API_PORT", "8000"))
 API_BASE_URL = os.getenv("API_BASE_URL", f"http://{API_HOST}:{API_PORT}")
+
+# ── ML training ───────────────────────────────────────────────────────────────
+WEIGHTS_DIR = BASE_DIR / "ml" / "weights"
+WEIGHTS_DIR.mkdir(exist_ok=True)
+MODEL_WEIGHTS_PATH = os.getenv(
+    "MODEL_WEIGHTS_PATH",
+    str(WEIGHTS_DIR / "resnet_sar_wind.pth"),
+)
+TRAINING_DATA_DIR = Path(os.getenv("TRAINING_DATA_DIR", str(BASE_DIR / "data" / "training")))
+TRAINING_MANIFEST = TRAINING_DATA_DIR / "manifest.csv"
