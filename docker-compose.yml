@@ -1,0 +1,39 @@
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: oceanwind
+      POSTGRES_PASSWORD: oceanwind
+      POSTGRES_DB: oceanwind
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U oceanwind -d oceanwind"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  api:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    environment:
+      DATABASE_URL: postgresql://oceanwind:oceanwind@db:5432/oceanwind
+      API_BASE_URL: http://localhost:8000
+      CDSE_CLIENT_ID: ${CDSE_CLIENT_ID:-}
+      CDSE_CLIENT_SECRET: ${CDSE_CLIENT_SECRET:-}
+      CDS_KEY: ${CDS_KEY:-}
+      CDS_URL: ${CDS_URL:-https://cds.climate.copernicus.eu/api}
+    volumes:
+      - ./backend/static:/app/static
+      - ./backend/ml/weights:/app/ml/weights
+    depends_on:
+      db:
+        condition: service_healthy
+
+volumes:
+  postgres_data:

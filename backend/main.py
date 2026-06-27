@@ -9,12 +9,13 @@ from fastapi.staticfiles import StaticFiles
 from database.config import engine, Base, SessionLocal
 from models.all_models import AnalysisTask, WindResult, ValidationResult  # register all tables
 from api import windfield
-from config import STATIC_DIR
+from config import DATABASE_URL, STATIC_DIR
 
 logging.basicConfig(level=logging.INFO)
 
-# Create all tables on startup
-Base.metadata.create_all(bind=engine)
+# SQLite dev convenience — production PostgreSQL uses Alembic migrations
+if DATABASE_URL.startswith("sqlite"):
+    Base.metadata.create_all(bind=engine)
 
 app = FastAPI(
     title="OceanWind AI API",

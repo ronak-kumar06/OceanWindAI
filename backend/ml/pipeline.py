@@ -30,7 +30,7 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 from scipy.interpolate import griddata
 from typing import Dict, Any
 
-from config import GRID_STEPS, STATIC_DIR, WIND_SPEED_MIN, WIND_SPEED_MAX
+from config import API_BASE_URL, GRID_STEPS, STATIC_DIR, WIND_SPEED_MIN, WIND_SPEED_MAX
 from retrieval.provider import get_data_provider
 from preprocessing.land_sea_mask import get_ocean_mask, apply_mask
 from preprocessing.tiling import extract_patches
@@ -220,7 +220,7 @@ def process_windfield(date_selected: str, bbox: list) -> Dict[str, Any]:
         data_source= source,
         static_dir = str(STATIC_DIR),
     )
-    image_url = f"http://127.0.0.1:8000/static/{filename}"
+    image_url = f"{API_BASE_URL.rstrip('/')}/static/{filename}"
 
     # ── Step 10: Build output ─────────────────────────────────────────────
     vectors = []

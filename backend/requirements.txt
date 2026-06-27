@@ -3,6 +3,8 @@ uvicorn[standard]
 pydantic[email]
 pydantic-settings
 sqlalchemy
+alembic
+psycopg2-binary
 python-dotenv
 httpx
 requests
