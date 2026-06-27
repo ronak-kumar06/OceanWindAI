@@ -9,7 +9,7 @@ from fastapi.staticfiles import StaticFiles
 from database.config import engine, Base, SessionLocal
 from models.all_models import AnalysisTask, WindResult, ValidationResult  # register all tables
 from api import windfield
-from config import DATABASE_URL, STATIC_DIR
+from config import DATABASE_URL, STATIC_DIR, CORS_ORIGINS
 
 logging.basicConfig(level=logging.INFO)
 
@@ -23,9 +23,10 @@ app = FastAPI(
     version="2.0.0",
 )
 
+_origins = CORS_ORIGINS if CORS_ORIGINS != ["*"] else ["*"]
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=_origins,
     allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],

@@ -1,0 +1,35 @@
+# Render Blueprint — https://render.com/docs/blueprint-spec
+# Connect this repo at render.com/create → Blueprint
+
+databases:
+  - name: oceanwind-db
+    plan: free
+    databaseName: oceanwind
+    user: oceanwind
+
+services:
+  - type: web
+    name: oceanwind-api
+    runtime: docker
+    plan: free
+    rootDir: backend
+    dockerfilePath: ./Dockerfile
+    healthCheckPath: /health
+    autoDeploy: true
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: oceanwind-db
+          property: connectionString
+      - key: API_BASE_URL
+        value: https://oceanwind-api.onrender.com
+      - key: CORS_ORIGINS
+        value: "*"
+      - key: CDSE_CLIENT_ID
+        sync: false
+      - key: CDSE_CLIENT_SECRET
+        sync: false
+      - key: CDS_KEY
+        sync: false
+      - key: CDS_URL
+        value: https://cds.climate.copernicus.eu/api

@@ -1,0 +1,43 @@
+name: Deploy OceanWind AI
+
+# Run manually from GitHub Actions after adding secrets:
+#   VERCEL_TOKEN, VERCEL_ORG_ID, VERCEL_PROJECT_ID
+# Set repository variable NEXT_PUBLIC_API_URL to your Render API URL.
+
+on:
+  workflow_dispatch:
+
+jobs:
+  deploy-frontend:
+    name: Deploy frontend to Vercel
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Pull Vercel environment
+        run: npx vercel pull --yes --environment=production --token=${{ secrets.VERCEL_TOKEN }}
+
+      - name: Build
+        env:
+          NEXT_PUBLIC_API_URL: ${{ vars.NEXT_PUBLIC_API_URL }}
+        run: npx vercel build --prod --token=${{ secrets.VERCEL_TOKEN }}
+
+      - name: Deploy to Vercel
+        run: npx vercel deploy --prebuilt --prod --token=${{ secrets.VERCEL_TOKEN }}
+
+  trigger-render:
+    name: Trigger Render redeploy
+    runs-on: ubuntu-latest
+    steps:
+      - name: POST deploy hook
+        run: curl -fsSL -X POST "${{ secrets.RENDER_DEPLOY_HOOK }}"
